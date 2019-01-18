@@ -6,9 +6,9 @@ from django.test import TestCase
 from schedule.factory import UserFactory, LyfteeScheduleFactory, LyfterServiceFactory
 from schedule.functions.internal import CandidateLyfteePoint
 from schedule.functions.internal import SchedulerEngine
-from schedule.models import LyfteeSchedule
+from schedule.models import LyfteeSchedule, PoolRide
 from schedule.tests.data import routes, fastest_route, distance_matrix
-
+import datetime
 
 class InternalTestCase(TestCase):
 
@@ -99,4 +99,12 @@ class InternalTestCase(TestCase):
         matrix.return_value = distance_matrix
         directions.return_value = routes
         engine = SchedulerEngine(self.lyfter_service, MagicMock())
-        print(engine.suggest_lyftee())
+        candidate_lyftee_point = engine.suggest_lyftee()
+        poolride = PoolRide.objects.create(
+            lyfter_service=self.lyfter_service,
+            lyftee_schedule=candidate_lyftee_point.lyftee_schedule_obj,
+            pickup_point_lat=candidate_lyftee_point.nearest_point[0],
+            pickup_point_long=candidate_lyftee_point.nearest_point[1],
+            timestamp=datetime.datetime.now()
+        )
+        print(poolride)

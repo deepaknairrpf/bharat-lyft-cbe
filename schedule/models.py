@@ -30,6 +30,8 @@ class PoolRide(models.Model):
     has_ride_completed = models.BooleanField(default=False)
     lyftee_rating = IntegerRangeField(min_value=1, max_value=5, null=True)
     lyfter_rating = IntegerRangeField(min_value=1, max_value=5, null=True)
+    pickup_point_lat = models.FloatField()
+    pickup_point_long = models.FloatField()
     timestamp = models.DateTimeField()
 
     class Meta:

@@ -59,7 +59,7 @@ class SchedulerEngine:
         if is_lyftee_source_on_the_way & is_lyftee_dest_on_the_way:
             return  True, point_with_least_distance, min_distance
         else:
-            return is_lyftee_source_on_the_way & is_lyftee_dest_on_the_way, (float("inf"), float("inf")), float("inf")
+            return False, (float("inf"), float("inf")), float("inf")
 
     def _get_servicable_schedules(self, candidate_lyftee_points):
         lyfter_coord = (self.lyfter_service_obj.source_lat, self.lyfter_service_obj.source_long)
@@ -96,7 +96,7 @@ class SchedulerEngine:
 
         if len(assignable_schedule_lyfts) > 0:
             assignable_schedule_lyfts.sort(key=lambda obj: obj.lyftee_schedule_obj.timestamp)
-            return self._get_servicable_schedules(assignable_schedule_lyfts)[0].lyftee_schedule_obj
+            return self._get_servicable_schedules(assignable_schedule_lyfts)[0]
 
         return None
 

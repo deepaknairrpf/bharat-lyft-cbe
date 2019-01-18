@@ -1,5 +1,5 @@
 from rest_framework import viewsets
-
+import datetime
 from schedule.factory import LyfteeScheduleFactory
 from .models import LyfteeSchedule
 from .models import LyfterService
@@ -11,6 +11,8 @@ from rest_framework.decorators import action
 from schedule.functions.internal import SchedulerEngine
 import googlemaps
 from lyft.settings import GMAPS_API_KEY
+from schedule.models import PoolRide
+
 
 class LyfteeScheduleViewset(viewsets.ModelViewSet):
     queryset = LyfteeSchedule.objects.all()
@@ -56,6 +58,17 @@ class LyfterServiceViewset(viewsets.ModelViewSet):
         lyfter_service_object = self.get_object()
         google_client = googlemaps.Client(key=GMAPS_API_KEY)
         engine = SchedulerEngine(lyfter_service_object, google_client)
-        lyftee_schedule_object = engine.suggest_lyftee()
-        serializer = LyfteeScheduleSerializer(lyftee_schedule_object)
-        return Response(data=serializer.data, status=status.HTTP_200_OK)
+        candidate_lyftee_point = engine.suggest_lyftee()
+
+        if candidate_lyftee_point:
+            PoolRide.objects.create(
+                lyfter_service=lyfter_service_object,
+                lyftee_schedule=candidate_lyftee_point.lyftee_schedule_obj,
+                pickup_point_lat=candidate_lyftee_point.nearest_point[0],
+                pickup_point_long=candidate_lyftee_point.nearest_point[1],
+                timestamp=datetime.datetime.now()
+            )
+            serializer = LyfteeScheduleSerializer(candidate_lyftee_point.lyftee_schedule_obj)
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+        return Response(data=[], status=status.HTTP_200_OK)
