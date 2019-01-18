@@ -13,8 +13,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class LyfteeScheduleSerializer(serializers.ModelSerializer):
-
-    user = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
+    user = UserSerializer(many=False, read_only=True)
 
     class Meta:
         model = LyfteeSchedule
@@ -28,7 +27,8 @@ class LyfteeScheduleSerializer(serializers.ModelSerializer):
 
 
 class LyfterServiceSerializer(serializers.ModelSerializer):
-    user = serializers.PrimaryKeyRelatedField(many=False, read_only=True)
+    user = UserSerializer(many=False, read_only=True)
+
     class Meta:
         model = LyfterService
         fields = "__all__"
@@ -36,12 +36,13 @@ class LyfterServiceSerializer(serializers.ModelSerializer):
 
 class PoolRideSerializer(serializers.ModelSerializer):
 
-    lyftee_schedule = serializers.PrimaryKeyRelatedField(many=False)
-    lyfter_service = serializers.PrimaryKeyRelatedField(many=False)
+    lyftee_schedule = LyfteeScheduleSerializer(many=False, read_only=True)
+    lyfter_service = LyfterServiceSerializer(many=False, read_only=True)
 
     class Meta:
         model = PoolRide
         fields = "__all__"
+
 
 
 

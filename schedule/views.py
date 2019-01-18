@@ -5,6 +5,7 @@ from .models import LyfteeSchedule
 from .models import LyfterService
 from .serializers import LyfteeScheduleSerializer
 from .serializers import LyfterServiceSerializer
+from .serializers import PoolRideSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
@@ -71,4 +72,24 @@ class LyfterServiceViewset(viewsets.ModelViewSet):
             serializer = LyfteeScheduleSerializer(candidate_lyftee_point.lyftee_schedule_obj)
             return Response(data=serializer.data, status=status.HTTP_200_OK)
 
-        return Response(data=[], status=status.HTTP_200_OK)
+        return Response(data=None, status=status.HTTP_200_OK)
+
+
+class PoolRideViewset(viewsets.ModelViewSet):
+    queryset = PoolRide.objects.all()
+    serializer_class = PoolRideSerializer
+
+    @action(
+        detail=False,
+        url_path = "get-latest-assigned-ride",
+        url_name = "get-latest-assigned-ride",
+        methods=['get']
+    )
+    def get_latest_assigned_ride(self, request, *args, **kwargs):
+        user = request.user
+        recently_assigned_pool_rides = PoolRide.objects.filter(lyftee_schedule__user=user.id ,has_ride_completed=False).order_by('-timestamp')
+        if len(recently_assigned_pool_rides) > 0:
+            serializer = PoolRideSerializer(recently_assigned_pool_rides.first())
+            return Response(data=serializer.data, status=status.HTTP_200_OK)
+
+        return Response(data=None, status=status.HTTP_200_OK)
