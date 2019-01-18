@@ -159,6 +159,8 @@ USE_L10N = True
 
 USE_TZ = True
 
+GMAPS_API_KEY ='AIzaSyDwnRj7V4ONVgIxq_b4N7BN8MSUW0QuMms'
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
