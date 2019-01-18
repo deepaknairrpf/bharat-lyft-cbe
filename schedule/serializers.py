@@ -5,4 +5,11 @@ class LyfteeScheduleSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = LyfteeSchedule
-        exclude = ('is_allocated',)
+        fields = "__all__"
+
+    is_allocated = serializers.SerializerMethodField()
+
+
+    def get_is_allocated(self, obj):
+        return obj.is_allocated
+

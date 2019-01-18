@@ -5,3 +5,4 @@ markdown
 djangorestframework-simplejwt==3.2.3
 django-filter
 factory_boy
+django-extensions

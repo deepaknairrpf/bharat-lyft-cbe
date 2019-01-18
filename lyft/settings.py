@@ -40,6 +40,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'schedule',
+    'django_extensions',
+
 ]
 
 MIDDLEWARE = [
@@ -108,7 +110,7 @@ SIMPLE_JWT = {
     'SIGNING_KEY': SECRET_KEY,
     'VERIFYING_KEY': None,
 
-    'AUTH_HEADER_TYPES': ('Bearer',),
+    'AUTH_HEADER_TYPES': ('JWT',),
     'USER_ID_FIELD': 'id',
     'USER_ID_CLAIM': 'user_id',
 

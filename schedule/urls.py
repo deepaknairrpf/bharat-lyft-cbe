@@ -1,6 +1,7 @@
 from rest_framework.routers import SimpleRouter
-from .views import LyfteeSchedule
+from .views import LyfteeScheduleViewset
 
 router = SimpleRouter()
 
-router.register('lyftee-schedules', LyfteeSchedule, base_name="lyftee-schedule")
+router.register('lyftee-schedules', LyfteeScheduleViewset, base_name="lyftee-schedule")
+urlpatterns = router.urls
