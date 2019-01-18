@@ -21,8 +21,13 @@ from rest_framework_simplejwt.views import (
     TokenVerifyView,
 )
 from django.conf.urls import url
+from django.urls import include
 
 urlpatterns = [
+    url(r'^api/', include('schedule.urls')),
+]
+
+urlpatterns += [
     path('admin/', admin.site.urls),
     url(r'^api/token/$', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     url(r'^api/token/refresh/$', TokenRefreshView.as_view(), name='token_refresh'),

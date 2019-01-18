@@ -9,3 +9,4 @@ class LyfteeScheduleViewset(viewsets.ModelViewSet):
 
     def create(self, request, *args, **kwargs):
         user = request.user
+        print(request.data)
