@@ -8,7 +8,9 @@ from .serializers import LyfterServiceSerializer
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import action
-
+from schedule.functions.internal import SchedulerEngine
+import googlemaps
+from lyft.settings import GMAPS_API_KEY
 
 class LyfteeScheduleViewset(viewsets.ModelViewSet):
     queryset = LyfteeSchedule.objects.all()
@@ -36,7 +38,6 @@ class LyfterServiceViewset(viewsets.ModelViewSet):
         user = request.user
         request_data = request.data.copy()
         request_data["user"] = user.id
-        print("The data", request_data)
         serializer = LyfterServiceSerializer(data=request_data)
 
         if serializer.is_valid():
@@ -47,14 +48,14 @@ class LyfterServiceViewset(viewsets.ModelViewSet):
 
     @action(
         detail=True,
-        url_path = "assign-lyftee",
-        url_name = "assign-lyftee",
-        methods=['post', 'get']
+        url_path = "find-lyftee",
+        url_name = "find-lyftee",
+        methods=['get']
     )
-    def assign_lyftee(self, request, *args, **kwargs):
-        obj = self.get_object()
-
-        # Remove this
-        lyftee_schedule_object = LyfteeScheduleFactory()
+    def find_lyftee(self, request, *args, **kwargs):
+        lyfter_service_object = self.get_object()
+        google_client = googlemaps.Client(key=GMAPS_API_KEY)
+        engine = SchedulerEngine(lyfter_service_object, google_client)
+        lyftee_schedule_object = engine.suggest_lyftee()
         serializer = LyfteeScheduleSerializer(lyftee_schedule_object)
         return Response(data=serializer.data, status=status.HTTP_200_OK)

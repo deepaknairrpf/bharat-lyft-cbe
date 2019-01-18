@@ -80,7 +80,7 @@ class SchedulerEngine:
                 servicable_schedules.append(candidate_lyftee_points[idx])
         return servicable_schedules
 
-    def allocate_lyftee(self):
+    def suggest_lyftee(self):
         fastest_lyfter_route = self._get_fastest_route()
         scheduled_lyfts = LyfteeSchedule.objects.filter(is_valid=True, is_allocated=False)
 
@@ -96,7 +96,7 @@ class SchedulerEngine:
 
         if len(assignable_schedule_lyfts) > 0:
             assignable_schedule_lyfts.sort(key=lambda obj: obj.lyftee_schedule_obj.timestamp)
-            return self._get_servicable_schedules(assignable_schedule_lyfts)
+            return self._get_servicable_schedules(assignable_schedule_lyfts)[0].lyftee_schedule_obj
 
-        return []
+        return None
 

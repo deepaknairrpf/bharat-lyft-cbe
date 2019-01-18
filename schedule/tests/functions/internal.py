@@ -1,12 +1,14 @@
-from schedule.tests.data import routes, fastest_route, distance_matrix
-import googlemaps
-from django.test import TestCase
 from unittest.mock import MagicMock
 from unittest.mock import patch
+
+from django.test import TestCase
+
 from schedule.factory import UserFactory, LyfteeScheduleFactory, LyfterServiceFactory
-from schedule.functions.internal import SchedulerEngine
 from schedule.functions.internal import CandidateLyfteePoint
+from schedule.functions.internal import SchedulerEngine
 from schedule.models import LyfteeSchedule
+from schedule.tests.data import routes, fastest_route, distance_matrix
+
 
 class InternalTestCase(TestCase):
 
@@ -93,8 +95,8 @@ class InternalTestCase(TestCase):
 
     @patch('schedule.functions.internal.directions')
     @patch('schedule.functions.internal.distance_matrix')
-    def test_allocate_lyftee(self, matrix, directions):
+    def test_suggest_lyftee(self, matrix, directions):
         matrix.return_value = distance_matrix
         directions.return_value = routes
         engine = SchedulerEngine(self.lyfter_service, MagicMock())
-        print(engine.allocate_lyftee())
+        print(engine.suggest_lyftee())
