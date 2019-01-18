@@ -76,7 +76,7 @@ class SchedulerEngine:
 
     def allocate_lyftee(self):
         fastest_lyfter_route = self._get_fastest_route()
-        scheduled_lyfts = LyfteeSchedule.objects.all() # Filter here
+        scheduled_lyfts = LyfteeSchedule.objects.filter(is_valid=True, is_allocated=False)
 
         assignable_schedule_lyfts = []
 
