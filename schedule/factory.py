@@ -25,10 +25,10 @@ class UserFactory(DjangoModelFactory):
 
 class LyfteeScheduleFactory(DjangoModelFactory):
 
-    source_lat = 23.142
-    source_long = 21.242
-    destination_lat = 21.512
-    destination_long = 11.24
+    source_lat = 13.090104
+    source_long = 80.205357
+    destination_lat = 13.086637
+    destination_long = 80.217377
     scheduled_time = datetime.datetime.now()
     user = SubFactory(UserFactory)
     timestamp = datetime.datetime.now() - timedelta(days=1)
