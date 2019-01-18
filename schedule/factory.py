@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from factory.fuzzy import FuzzyText
 
 from .models import LyfteeSchedule
+from .models import LyfterService
 
 
 
@@ -34,3 +35,15 @@ class LyfteeScheduleFactory(DjangoModelFactory):
 
     class Meta:
         model = LyfteeSchedule
+
+class LyfterServiceFactory(DjangoModelFactory):
+
+    user = SubFactory(UserFactory)
+    source_lat = 23.142
+    source_long = 21.242
+    destination_lat = 21.512
+    destination_long = 11.24
+
+    class Meta:
+        model = LyfterService
+

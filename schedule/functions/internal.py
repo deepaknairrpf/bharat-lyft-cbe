@@ -1,15 +1,14 @@
-import polyline
-import geopy.distance
-from schedule.models import LyfteeSchedule
-import googlemaps
-from googlemaps.distance_matrix import distance_matrix
 import datetime
-from datetime import timedelta
-from lyft.settings import GMAPS_API_KEY
-from googlemaps.directions import directions
+from datetime import timedelta, timezone
 
-gmaps = googlemaps.Client(key=GMAPS_API_KEY)
-SCHEDULE_TIME_DIFFERENCE_THRESHOLD = timedelta(minutes=10)
+import geopy.distance
+import polyline
+from googlemaps.directions import directions
+from googlemaps.distance_matrix import distance_matrix
+
+from schedule.models import LyfteeSchedule
+
+SCHEDULE_TIME_DIFFERENCE_THRESHOLD = timedelta(minutes=15)
 
 class CandidateLyfteePoint:
 
@@ -21,75 +20,83 @@ class CandidateLyfteePoint:
 
 class SchedulerEngine:
 
-    def __init__(self, lyfter_service_obj):
+    def __init__(self, lyfter_service_obj, google_client):
         self.lyfter_service_obj = lyfter_service_obj
-
+        self.gmaps = google_client
 
     def _get_fastest_route(self):
         lyfter_start_coord = (self.lyfter_service_obj.source_lat, self.lyfter_service_obj.source_long)
         lyfter_dest_coord = (self.lyfter_service_obj.destination_lat, self.lyfter_service_obj.destination_lat)
-        lyfter_path = directions(gmaps, lyfter_start_coord, lyfter_dest_coord ,alternatives=True, mode="driving")
-        routes = lyfter_path["routes"]
+        routes = directions(self.gmaps, lyfter_start_coord, lyfter_dest_coord ,alternatives=True, mode="driving")
         route_duration = [route["legs"][0]["duration"]["value"] for route in routes]
         fastest_route_index = route_duration.index(min(route_duration))
         return routes[fastest_route_index]["legs"][0]["steps"]
 
-    def _is_lyftee_source_on_the_way(self, lyftee_coord, steps):
+    def _is_lyftee_path_on_the_way(self, lyftee_coord_src, lyftee_coord_dest, steps):
         points_list = []
         for step in steps:
             points_list += polyline.decode(step["polyline"]["points"])
 
-        threshold = 0.1
+        threshold = 0.5
         min_distance = float("inf")
         point_with_least_distance = (float("inf"), float("inf"))
         is_lyftee_source_on_the_way = False
+        is_lyftee_dest_on_the_way = False
 
         for polyline_coord in points_list:
-            distance = geopy.distance.geodesic(lyftee_coord, polyline_coord).km
-            if distance <= threshold:
-                if distance < min_distance:
-                    min_distance = distance
+            src_distance = geopy.distance.geodesic(lyftee_coord_src, polyline_coord).km
+            dest_distance = geopy.distance.geodesic(lyftee_coord_dest, polyline_coord).km
+
+            if src_distance <= threshold:
+                if src_distance < min_distance:
+                    min_distance = src_distance
                     is_lyftee_source_on_the_way = True
                     point_with_least_distance = polyline_coord
 
-        return is_lyftee_source_on_the_way, point_with_least_distance, min_distance
+            if dest_distance <= threshold:
+                is_lyftee_dest_on_the_way = True
+
+        if is_lyftee_source_on_the_way & is_lyftee_dest_on_the_way:
+            return  True, point_with_least_distance, min_distance
+        else:
+            return is_lyftee_source_on_the_way & is_lyftee_dest_on_the_way, (float("inf"), float("inf")), float("inf")
 
     def _get_servicable_schedules(self, candidate_lyftee_points):
-        lyfter_coord = (self.lyfter_service_obj.source_lat, self.lyfter_service_obj.source_lat)
+        lyfter_coord = (self.lyfter_service_obj.source_lat, self.lyfter_service_obj.source_long)
         destination_coords = [
-            (candidate_lyftee_point.schedule_obj.destination_lat, candidate_lyftee_point.schedule_obj.destination_long)
+            (candidate_lyftee_point.lyftee_schedule_obj.destination_lat, candidate_lyftee_point.lyftee_schedule_obj.destination_long)
             for candidate_lyftee_point in candidate_lyftee_points
         ]
 
-        matrix = distance_matrix(gmaps, [lyfter_coord], destination_coords)
+        matrix = distance_matrix(self.gmaps, [lyfter_coord], destination_coords)
         servicable_schedules = []
-        present_time = datetime.datetime.now()
+        present_time = datetime.datetime.now(timezone.utc)
 
         for idx, row in enumerate(matrix["rows"][0]["elements"]):
             duration_in_seconds = row["duration"]["value"]
             lyftee_schedule_obj = candidate_lyftee_points[idx].lyftee_schedule_obj
-            time_diff = present_time + timedelta(seconds=duration_in_seconds) - lyftee_schedule_obj.scheduled_time
-
-            if time_diff < timedelta(seconds=SCHEDULE_TIME_DIFFERENCE_THRESHOLD):
+            time_diff = (present_time - lyftee_schedule_obj.scheduled_time) + timedelta(seconds=duration_in_seconds)
+            if time_diff < SCHEDULE_TIME_DIFFERENCE_THRESHOLD:
                 servicable_schedules.append(candidate_lyftee_points[idx])
         return servicable_schedules
 
-    def allocate_lyftee(self):
+    def suggest_lyftee(self):
         fastest_lyfter_route = self._get_fastest_route()
         scheduled_lyfts = LyfteeSchedule.objects.filter(is_valid=True, is_allocated=False)
 
         assignable_schedule_lyfts = []
 
         for schedule_lyft in scheduled_lyfts:
-            lyftee_coord = (schedule_lyft.source_lat, schedule_lyft.source_long)
-            status, point, distance = self._is_lyftee_source_on_the_way(lyftee_coord, fastest_lyfter_route)
+            lyftee_coord_src = (schedule_lyft.source_lat, schedule_lyft.source_long)
+            lyftee_coord_dest = (schedule_lyft.destination_lat, schedule_lyft.destination_long)
+            status, point, distance = self._is_lyftee_path_on_the_way(lyftee_coord_src, lyftee_coord_dest ,fastest_lyfter_route)
 
             if status:
                 assignable_schedule_lyfts.append(CandidateLyfteePoint(schedule_lyft, point, distance))
 
         if len(assignable_schedule_lyfts) > 0:
             assignable_schedule_lyfts.sort(key=lambda obj: obj.lyftee_schedule_obj.timestamp)
-            return self._get_servicable_schedules(assignable_schedule_lyfts)
+            return self._get_servicable_schedules(assignable_schedule_lyfts)[0].lyftee_schedule_obj
 
-        return []
+        return None
 
