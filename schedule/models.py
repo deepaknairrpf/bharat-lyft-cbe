@@ -5,8 +5,10 @@ from utils.model import IntegerRangeField
 # Create your models here.
 
 class LyfteeSchedule(models.Model):
-    source = models.DecimalField(max_digits=9, decimal_places=6)
-    destination = models.DecimalField(max_digits=9, decimal_places=6)
+    source_lat = models.DecimalField(max_digits=9, decimal_places=6)
+    source_long = models.DecimalField(max_digits=9, decimal_places=6)
+    destination_lat = models.DecimalField(max_digits=9, decimal_places=6)
+    destination_long = models.DecimalField(max_digits=9, decimal_places=6)
     scheduled_time = models.DateTimeField()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     is_allocated = models.BooleanField(default=False)
@@ -14,8 +16,10 @@ class LyfteeSchedule(models.Model):
 
 class LyfterService(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    source = models.DecimalField(max_digits=9, decimal_places=6)
-    destination = models.DecimalField(max_digits=9, decimal_places=6)
+    source_lat = models.DecimalField(max_digits=9, decimal_places=6)
+    source_long = models.DecimalField(max_digits=9, decimal_places=6)
+    destination_lat = models.DecimalField(max_digits=9, decimal_places=6)
+    destination_long = models.DecimalField(max_digits=9, decimal_places=6)
     lyftee_max_limit = models.PositiveIntegerField()
 
 

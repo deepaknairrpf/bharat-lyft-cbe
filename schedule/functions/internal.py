@@ -1,6 +1,7 @@
 import polyline
 import geopy.distance
-import geopy.distance
+from schedule.models import LyfteeSchedule
+
 
 def get_fastest_route(lyfter_path):
     routes = lyfter_path["routes"]
@@ -19,7 +20,7 @@ def is_lyftee_source_on_the_way(lyftee_coord, steps):
     is_lyftee_source_on_the_way = False
 
     for polyline_coord in points_list:
-        distance = geopy.distance.vincenty(lyftee_point, polyline_coord).km
+        distance = geopy.distance.vincenty(lyftee_coord, polyline_coord).km
         if distance <= threshold:
             print(polyline_coord, distance)
             if distance < point_with_least_distance:
@@ -27,3 +28,14 @@ def is_lyftee_source_on_the_way(lyftee_coord, steps):
                 is_lyftee_source_on_the_way = True
 
     return is_lyftee_source_on_the_way, point_with_least_distance
+
+
+fastest_lyfter_route = get_fastest_route(lyfter_path)
+scheduled_lyfts = LyfteeSchedule.objects.all()
+assignable_schedule_lyft_dict = {}
+for schedule_lyft in scheduled_lyfts:
+    lyftee_cord = (schedule_lyft.source_lat, schedule_lyft.source_long)
+    status, point, distancepy = is_lyftee_source_on_the_way(lyftee_coord, fastest_lyfter_route)
+    if status:
+        assignable_schedule_lyft_dict[schedule_lyft.id] = (status, point, distance)
+print(assignable_schedule_lyft_dict)
