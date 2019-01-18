@@ -1,4 +1,4 @@
-from schedule.tests.data import routes, fastest_route
+from schedule.tests.data import routes, fastest_route, distance_matrix
 import googlemaps
 from django.test import TestCase
 from unittest.mock import MagicMock
@@ -86,5 +86,15 @@ class InternalTestCase(TestCase):
             is_it_on_way, point, distance = engine._is_lyftee_path_on_the_way(lyftee_coord_src, lyftee_coord_dest, steps)
             self.assertTrue(is_it_on_way)
 
-    def test__get_servicable_schedules(self):
-        print(self.candidate_lyftee_points)
+    @patch('schedule.functions.internal.distance_matrix')
+    def test__get_servicable_schedules(self, matrix):
+        matrix.return_value = distance_matrix
+        engine = SchedulerEngine(self.lyfter_service, MagicMock())
+
+    @patch('schedule.functions.internal.directions')
+    @patch('schedule.functions.internal.distance_matrix')
+    def test_allocate_lyftee(self, matrix, directions):
+        matrix.return_value = distance_matrix
+        directions.return_value = routes
+        engine = SchedulerEngine(self.lyfter_service, MagicMock())
+        print(engine.allocate_lyftee())

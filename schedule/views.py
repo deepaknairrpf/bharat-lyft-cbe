@@ -21,7 +21,6 @@ class LyfteeScheduleViewset(viewsets.ModelViewSet):
         serializer = LyfteeScheduleSerializer(data=request_data)
 
         if serializer.is_valid():
-            print(serializer.validated_data)
             serializer.save()
             return Response(data=serializer.data, status=status.HTTP_201_CREATED)
 

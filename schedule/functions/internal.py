@@ -1,5 +1,5 @@
 import datetime
-from datetime import timedelta
+from datetime import timedelta, timezone
 
 import geopy.distance
 import polyline
@@ -8,7 +8,7 @@ from googlemaps.distance_matrix import distance_matrix
 
 from schedule.models import LyfteeSchedule
 
-SCHEDULE_TIME_DIFFERENCE_THRESHOLD = timedelta(minutes=10)
+SCHEDULE_TIME_DIFFERENCE_THRESHOLD = timedelta(minutes=15)
 
 class CandidateLyfteePoint:
 
@@ -64,20 +64,19 @@ class SchedulerEngine:
     def _get_servicable_schedules(self, candidate_lyftee_points):
         lyfter_coord = (self.lyfter_service_obj.source_lat, self.lyfter_service_obj.source_long)
         destination_coords = [
-            (candidate_lyftee_point.schedule_obj.destination_lat, candidate_lyftee_point.schedule_obj.destination_long)
+            (candidate_lyftee_point.lyftee_schedule_obj.destination_lat, candidate_lyftee_point.lyftee_schedule_obj.destination_long)
             for candidate_lyftee_point in candidate_lyftee_points
         ]
 
         matrix = distance_matrix(self.gmaps, [lyfter_coord], destination_coords)
         servicable_schedules = []
-        present_time = datetime.datetime.now()
+        present_time = datetime.datetime.now(timezone.utc)
 
         for idx, row in enumerate(matrix["rows"][0]["elements"]):
             duration_in_seconds = row["duration"]["value"]
             lyftee_schedule_obj = candidate_lyftee_points[idx].lyftee_schedule_obj
-            time_diff = present_time + timedelta(seconds=duration_in_seconds) - lyftee_schedule_obj.scheduled_time
-
-            if time_diff < timedelta(seconds=SCHEDULE_TIME_DIFFERENCE_THRESHOLD):
+            time_diff = (present_time - lyftee_schedule_obj.scheduled_time) + timedelta(seconds=duration_in_seconds)
+            if time_diff < SCHEDULE_TIME_DIFFERENCE_THRESHOLD:
                 servicable_schedules.append(candidate_lyftee_points[idx])
         return servicable_schedules
 
