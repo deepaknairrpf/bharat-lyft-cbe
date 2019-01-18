@@ -50,7 +50,7 @@ class LyfterServiceViewset(viewsets.ModelViewSet):
         detail=True,
         url_path = "assign-lyftee",
         url_name = "assign-lyftee",
-        methods=['post', ]
+        methods=['post', 'get']
     )
     def assign_lyftee(self, request, *args, **kwargs):
         obj = self.get_object()
