@@ -21,7 +21,7 @@ class LyfterService(models.Model):
     source_long = models.FloatField()
     destination_lat = models.FloatField()
     destination_long = models.FloatField()
-    lyftee_max_limit = models.FloatField()
+    lyftee_max_limit = models.PositiveIntegerField(default=1)
 
 
 class PoolRide(models.Model):
