@@ -28,7 +28,11 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
-
+NOTEBOOK_ARGUMENTS = [
+    '--ip', '0.0.0.0',
+    '--allow-root',
+    '--no-browser',
+]
 # Application definition
 
 INSTALLED_APPS = [
@@ -53,6 +57,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
+
 
 ROOT_URLCONF = 'lyft.urls'
 
