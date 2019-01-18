@@ -12,15 +12,15 @@ class LyfteeSchedule(models.Model):
     scheduled_time = models.DateTimeField()
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     is_allocated = models.BooleanField(default=False)
-    timestamp = models.DateTimeField()
+    timestamp = models.DateTimeField(auto_now_add=True)
 
 class LyfterService(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    source_lat = models.DecimalField(max_digits=9, decimal_places=6)
-    source_long = models.DecimalField(max_digits=9, decimal_places=6)
-    destination_lat = models.DecimalField(max_digits=9, decimal_places=6)
-    destination_long = models.DecimalField(max_digits=9, decimal_places=6)
-    lyftee_max_limit = models.PositiveIntegerField()
+    source_lat = models.FloatField()
+    source_long = models.FloatField()
+    destination_lat = models.FloatField()
+    destination_long = models.FloatField()
+    lyftee_max_limit = models.FloatField()
 
 
 class PoolRide(models.Model):

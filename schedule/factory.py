@@ -1,9 +1,25 @@
 import datetime
 from datetime import timedelta
-from factory import Iterator
+from factory import Iterator, SubFactory, PostGenerationMethodCall
 from factory.django import DjangoModelFactory
 from django.contrib.auth.models import User
+from factory.fuzzy import FuzzyText
+
 from .models import LyfteeSchedule
+
+
+
+class UserFactory(DjangoModelFactory):
+
+    class Meta:
+        model = User
+
+    username = FuzzyText()
+    first_name = FuzzyText()
+    password = PostGenerationMethodCall(
+        'set_password', 'defaultPassword123'
+    )
+    is_staff = True
 
 
 class LyfteeScheduleFactory(DjangoModelFactory):
@@ -13,7 +29,7 @@ class LyfteeScheduleFactory(DjangoModelFactory):
     destination_lat = 21.512
     destination_long = 11.24
     scheduled_time = datetime.datetime.now()
-    user = Iterator(User.objects.all())
+    user = SubFactory(UserFactory)
     timestamp = datetime.datetime.now() - timedelta(days=1)
 
     class Meta:
