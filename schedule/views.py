@@ -39,15 +39,16 @@ class LyfteeScheduleViewset(viewsets.ModelViewSet):
             time_in_target_timezone = target_time.replace(
                 tzinfo=pytz.timezone(target_timezone)
             )
+            print(time_in_target_timezone)
             return time_in_target_timezone.astimezone(pytz.utc)
 
         user =request.user
         request_data = request.data.copy()
         request_data["user"] = user.id
-        request_data["scheduled_time"] = displace_time_in_utc_to_reflect_target_timezone(
-            target_timezone="Asia/Kolkata",
-            target_time=parser.parse(request_data["scheduled_time"])
-        )
+        tz = pytz.timezone("Asia/Calcutta")
+        indian_time = tz.localize(parser.parse(request_data["scheduled_time"]))
+        scheduled_time = indian_time.astimezone(pytz.utc)
+        request_data["scheduled_time"] = scheduled_time
         serializer = LyfteeScheduleSerializer(data=request_data)
 
         if serializer.is_valid():
@@ -79,13 +80,6 @@ class LyfterServiceViewset(viewsets.ModelViewSet):
         methods=['get']
     )
     def find_lyftee(self, request, *args, **kwargs):
-        forum = LyfteeScheduleFactory(
-            source_lat=13.049743,
-            source_long=80.209632,
-            destination_lat=13.049194,
-            destination_long=80.208497,
-            scheduled_time=timezone.now()
-        )
         lyfter_service_object = self.get_object()
         google_client = googlemaps.Client(key=GMAPS_API_KEY)
         engine = SchedulerEngine(lyfter_service_object, google_client)

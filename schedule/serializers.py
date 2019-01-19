@@ -30,9 +30,15 @@ class LyfteeScheduleSerializer(serializers.ModelSerializer):
 
 class LyfterServiceSerializer(serializers.ModelSerializer):
 
+    user_details = serializers.SerializerMethodField()
+
     class Meta:
         model = LyfterService
         fields = "__all__"
+
+    def get_user_details(self, obj):
+        user = User.objects.get(id=obj.user.id)
+        return UserSerializer(user).data
 
 
 class PoolRideSerializer(serializers.ModelSerializer):

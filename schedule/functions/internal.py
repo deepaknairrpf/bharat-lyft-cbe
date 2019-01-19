@@ -81,6 +81,7 @@ class SchedulerEngine:
 
         for idx, row in enumerate(matrix["rows"][0]["elements"]):
             duration_in_seconds = row["duration"]["value"]
+            print(present_time + timedelta(seconds=duration_in_seconds))
             lyftee_schedule_obj = candidate_lyftee_points[idx].lyftee_schedule_obj
             time_diff = (present_time - lyftee_schedule_obj.scheduled_time) + timedelta(seconds=duration_in_seconds)
             if time_diff < SCHEDULE_TIME_DIFFERENCE_THRESHOLD:
@@ -106,7 +107,9 @@ class SchedulerEngine:
         print(assignable_schedule_lyfts)
         if len(assignable_schedule_lyfts) > 0:
             assignable_schedule_lyfts.sort(key=lambda obj: obj.lyftee_schedule_obj.timestamp)
-            return self._get_servicable_schedules(assignable_schedule_lyfts)[0]
+            servicable_schedules = self._get_servicable_schedules(assignable_schedule_lyfts)
+            if len(servicable_schedules) > 0:
+                return servicable_schedules[0]
 
         return None
 
