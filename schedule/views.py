@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import viewsets
 
 from schedule.factory import LyfteeScheduleFactory
@@ -53,6 +54,13 @@ class LyfterServiceViewset(viewsets.ModelViewSet):
         methods=['get']
     )
     def find_lyftee(self, request, *args, **kwargs):
+        forum = LyfteeScheduleFactory(
+            source_lat=13.049743,
+            source_long=80.209632,
+            destination_lat=13.049194,
+            destination_long=80.208497,
+            scheduled_time=timezone.now()
+        )
         lyfter_service_object = self.get_object()
         google_client = googlemaps.Client(key=GMAPS_API_KEY)
         engine = SchedulerEngine(lyfter_service_object, google_client)
