@@ -29,6 +29,8 @@ class SchedulerEngine:
         lyfter_dest_coord = (self.lyfter_service_obj.destination_lat, self.lyfter_service_obj.destination_long)
         print(lyfter_start_coord, lyfter_dest_coord)
         routes = directions(self.gmaps, lyfter_start_coord, lyfter_dest_coord ,alternatives=True, mode="driving")
+        lyfter_dest_coord = (self.lyfter_service_obj.destination_lat, self.lyfter_service_obj.destination_long)
+        routes = directions(self.gmaps, lyfter_start_coord, lyfter_dest_coord, alternatives=True, mode="driving")
         route_duration = [route["legs"][0]["duration"]["value"] for route in routes]
         fastest_route_index = route_duration.index(min(route_duration))
         return routes[fastest_route_index]["legs"][0]["steps"]
@@ -60,7 +62,7 @@ class SchedulerEngine:
         if is_lyftee_source_on_the_way & is_lyftee_dest_on_the_way:
             return  True, point_with_least_distance, min_distance
         else:
-            return is_lyftee_source_on_the_way & is_lyftee_dest_on_the_way, (float("inf"), float("inf")), float("inf")
+            return False, (float("inf"), float("inf")), float("inf")
 
     def _get_servicable_schedules(self, candidate_lyftee_points):
         lyfter_coord = (self.lyfter_service_obj.source_lat, self.lyfter_service_obj.source_long)
@@ -94,10 +96,10 @@ class SchedulerEngine:
 
             if status:
                 assignable_schedule_lyfts.append(CandidateLyfteePoint(schedule_lyft, point, distance))
-
+        print(assignable_schedule_lyfts)
         if len(assignable_schedule_lyfts) > 0:
             assignable_schedule_lyfts.sort(key=lambda obj: obj.lyftee_schedule_obj.timestamp)
-            return self._get_servicable_schedules(assignable_schedule_lyfts)[0].lyftee_schedule_obj
+            return self._get_servicable_schedules(assignable_schedule_lyfts)[0]
 
         return None
 

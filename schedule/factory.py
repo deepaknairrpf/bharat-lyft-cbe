@@ -7,6 +7,7 @@ from factory.fuzzy import FuzzyText
 
 from .models import LyfteeSchedule
 from .models import LyfterService
+from .models import PoolRide
 
 
 
@@ -46,4 +47,15 @@ class LyfterServiceFactory(DjangoModelFactory):
 
     class Meta:
         model = LyfterService
+
+
+class PoolRideFactory(DjangoModelFactory):
+    lyftee_schedule = SubFactory(LyfteeScheduleFactory)
+    lyfter_service = SubFactory(LyfterServiceFactory)
+    pickup_point_lat = 21.412
+    pickup_point_long = 25.125
+    timestamp = datetime.datetime.now()
+
+    class Meta:
+        model = PoolRide
 
