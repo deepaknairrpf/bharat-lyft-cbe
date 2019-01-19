@@ -13,17 +13,19 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class LyfteeScheduleSerializer(serializers.ModelSerializer):
-    user = UserSerializer(read_only=True)
-
     class Meta:
         model = LyfteeSchedule
         fields = "__all__"
 
     is_allocated = serializers.SerializerMethodField()
-
+    user_details = serializers.SerializerMethodField()
 
     def get_is_allocated(self, obj):
         return obj.is_allocated
+
+    def get_user_details(self, obj):
+        user = User.objects.get(id=obj.user.id)
+        return UserSerializer(user).data
 
 
 class LyfterServiceSerializer(serializers.ModelSerializer):

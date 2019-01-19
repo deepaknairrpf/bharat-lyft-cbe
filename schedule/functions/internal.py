@@ -27,9 +27,6 @@ class SchedulerEngine:
     def _get_fastest_route(self):
         lyfter_start_coord = (self.lyfter_service_obj.source_lat, self.lyfter_service_obj.source_long)
         lyfter_dest_coord = (self.lyfter_service_obj.destination_lat, self.lyfter_service_obj.destination_long)
-        print(lyfter_start_coord, lyfter_dest_coord)
-        routes = directions(self.gmaps, lyfter_start_coord, lyfter_dest_coord ,alternatives=True, mode="driving")
-        lyfter_dest_coord = (self.lyfter_service_obj.destination_lat, self.lyfter_service_obj.destination_long)
         routes = directions(self.gmaps, lyfter_start_coord, lyfter_dest_coord, alternatives=True, mode="driving")
         route_duration = [route["legs"][0]["duration"]["value"] for route in routes]
         fastest_route_index = route_duration.index(min(route_duration))

@@ -1,19 +1,23 @@
-from django.utils import timezone
-from rest_framework import viewsets
 import datetime
+
+import googlemaps
+import pytz
+from dateutil import parser
+from django.utils import timezone
+from rest_framework import status
+from rest_framework import viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+
+from lyft.settings import GMAPS_API_KEY
 from schedule.factory import LyfteeScheduleFactory
+from schedule.functions.internal import SchedulerEngine
+from schedule.models import PoolRide
 from .models import LyfteeSchedule
 from .models import LyfterService
 from .serializers import LyfteeScheduleSerializer
 from .serializers import LyfterServiceSerializer
 from .serializers import PoolRideSerializer
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.decorators import action
-from schedule.functions.internal import SchedulerEngine
-import googlemaps
-from lyft.settings import GMAPS_API_KEY
-from schedule.models import PoolRide
 
 
 class LyfteeScheduleViewset(viewsets.ModelViewSet):
@@ -21,15 +25,34 @@ class LyfteeScheduleViewset(viewsets.ModelViewSet):
     serializer_class = LyfteeScheduleSerializer
 
     def create(self, request, *args, **kwargs):
+
+        def displace_time_in_utc_to_reflect_target_timezone(target_timezone, target_time):
+            """Displaces time in UTC that matches the time in target timezone.
+
+                Args:
+                target_timezone (str): One the of the supported timezone strings.
+                target_time (datetime.datetime): Input time that has to be displaced.
+
+                Returns:
+                The time is displaced in UTC to reflect the time in target timezone.
+                """
+            time_in_target_timezone = target_time.replace(
+                tzinfo=pytz.timezone(target_timezone)
+            )
+            return time_in_target_timezone.astimezone(pytz.utc)
+
         user =request.user
-        request_data = request.POST.copy()
+        request_data = request.data.copy()
         request_data["user"] = user.id
+        request_data["scheduled_time"] = displace_time_in_utc_to_reflect_target_timezone(
+            target_timezone="Asia/Kolkata",
+            target_time=parser.parse(request_data["scheduled_time"])
+        )
         serializer = LyfteeScheduleSerializer(data=request_data)
 
         if serializer.is_valid():
             serializer.save()
             return Response(data=serializer.data, status=status.HTTP_201_CREATED)
-
         return Response(data=serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
@@ -93,7 +116,10 @@ class PoolRideViewset(viewsets.ModelViewSet):
     )
     def get_latest_assigned_ride(self, request, *args, **kwargs):
         user = request.user
-        recently_assigned_pool_rides = PoolRide.objects.filter(lyftee_schedule__user=user.id ,has_ride_completed=False).order_by('-timestamp')
+        recently_assigned_pool_rides = PoolRide.objects.filter(
+            lyftee_schedule__user=user.id,
+            has_ride_completed=False
+        ).order_by('-timestamp')
         if len(recently_assigned_pool_rides) > 0:
             serializer = PoolRideSerializer(recently_assigned_pool_rides.first())
             return Response(data=serializer.data, status=status.HTTP_200_OK)
