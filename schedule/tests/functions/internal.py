@@ -43,8 +43,8 @@ class InternalTestCase(TestCase):
             engine = SchedulerEngine(self.lyfter_service, MagicMock())
             lyftee_coord_src = (schedule.source_lat, schedule.source_long)
             lyftee_coord_dest = (schedule.destination_lat, schedule.destination_long)
-            status, point, distance = engine._is_lyftee_path_on_the_way(lyftee_coord_src, lyftee_coord_dest ,fastest_route)
-            candidate_lyftee_point = CandidateLyfteePoint(schedule, point, distance)
+            status, src_point, src_distance, dest_point, dest_distance = engine._is_lyftee_path_on_the_way(lyftee_coord_src, lyftee_coord_dest ,fastest_route)
+            candidate_lyftee_point = CandidateLyfteePoint(schedule, src_point, src_distance, dest_point, dest_distance)
             self.candidate_lyftee_points.append(candidate_lyftee_point)
 
     @patch('schedule.functions.internal.directions')
@@ -59,7 +59,7 @@ class InternalTestCase(TestCase):
         steps = fastest_route
         lyftee_coord_src = (self.lyftee_schedule_1.source_lat, self.lyftee_schedule_1.source_long)
         lyftee_coord_dest = (self.lyftee_schedule_1.destination_lat, self.lyftee_schedule_1.destination_long)
-        is_it_on_way, point, distance = engine._is_lyftee_path_on_the_way(lyftee_coord_src, lyftee_coord_dest, steps)
+        is_it_on_way, src_point, src_distance, dest_point, dest_distance  = engine._is_lyftee_path_on_the_way(lyftee_coord_src, lyftee_coord_dest, steps)
         self.assertTrue(is_it_on_way)
 
     def test__is_lyftee_path_on_the_way_returns_false(self):
@@ -67,7 +67,7 @@ class InternalTestCase(TestCase):
         steps = fastest_route
         lyftee_coord_src = (13.069245, 80.212010)
         lyftee_coord_dest = (13.068178, 80.217320)
-        is_it_on_way, point, distance = engine._is_lyftee_path_on_the_way(lyftee_coord_src, lyftee_coord_dest, steps)
+        is_it_on_way, src_point, src_distance, dest_point, dest_distance  = engine._is_lyftee_path_on_the_way(lyftee_coord_src, lyftee_coord_dest, steps)
         self.assertFalse(is_it_on_way)
 
 
@@ -76,7 +76,7 @@ class InternalTestCase(TestCase):
         steps = fastest_route
         lyftee_coord_src = (13.068919, 80.191505)
         lyftee_coord_dest = (13.091178, 80.194477)
-        is_it_on_way, point, distance = engine._is_lyftee_path_on_the_way(lyftee_coord_src, lyftee_coord_dest, steps)
+        is_it_on_way, src_point, src_distance, dest_point, dest_distance = engine._is_lyftee_path_on_the_way(lyftee_coord_src, lyftee_coord_dest, steps)
         self.assertFalse(is_it_on_way)
 
     def test__is_lyftee_path_returns_true(self):
@@ -85,7 +85,7 @@ class InternalTestCase(TestCase):
         for lyftee_schedule in LyfteeSchedule.objects.all():
             lyftee_coord_src = (lyftee_schedule.source_lat, lyftee_schedule.source_long)
             lyftee_coord_dest = (lyftee_schedule.destination_lat, lyftee_schedule.destination_long)
-            is_it_on_way, point, distance = engine._is_lyftee_path_on_the_way(lyftee_coord_src, lyftee_coord_dest, steps)
+            is_it_on_way,src_point, src_distance, dest_point, dest_distance  = engine._is_lyftee_path_on_the_way(lyftee_coord_src, lyftee_coord_dest, steps)
             self.assertTrue(is_it_on_way)
 
     @patch('schedule.functions.internal.distance_matrix')
@@ -103,8 +103,10 @@ class InternalTestCase(TestCase):
         poolride = PoolRide.objects.create(
             lyfter_service=self.lyfter_service,
             lyftee_schedule=candidate_lyftee_point.lyftee_schedule_obj,
-            pickup_point_lat=candidate_lyftee_point.nearest_point[0],
-            pickup_point_long=candidate_lyftee_point.nearest_point[1],
+            pickup_point_lat=candidate_lyftee_point.src_nearest_point[0],
+            pickup_point_long=candidate_lyftee_point.src_nearest_point[1],
+            drop_point_lat=candidate_lyftee_point.dest_nearest_point[0],
+            drop_point_long=candidate_lyftee_point.dest_nearest_point[1],
             timestamp=datetime.datetime.now()
         )
         print(poolride)

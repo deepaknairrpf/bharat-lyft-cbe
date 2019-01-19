@@ -12,10 +12,12 @@ SCHEDULE_TIME_DIFFERENCE_THRESHOLD = timedelta(minutes=15)
 
 class CandidateLyfteePoint:
 
-    def __init__(self, lyftee_schedule_obj, nearest_point, least_distance_to_route):
+    def __init__(self, lyftee_schedule_obj, src_nearest_point, src_least_distance_to_route, dest_nearest_point, dest_least_distance_to_route):
         self.lyftee_schedule_obj = lyftee_schedule_obj
-        self.nearest_point = nearest_point
-        self.least_distance_to_route = least_distance_to_route
+        self.src_nearest_point = src_nearest_point
+        self.src_least_distance_to_route = src_least_distance_to_route
+        self.dest_nearest_point = dest_nearest_point
+        self.dest_least_distance_to_route = dest_least_distance_to_route
 
 
 class SchedulerEngine:
@@ -26,9 +28,6 @@ class SchedulerEngine:
 
     def _get_fastest_route(self):
         lyfter_start_coord = (self.lyfter_service_obj.source_lat, self.lyfter_service_obj.source_long)
-        lyfter_dest_coord = (self.lyfter_service_obj.destination_lat, self.lyfter_service_obj.destination_long)
-        print(lyfter_start_coord, lyfter_dest_coord)
-        routes = directions(self.gmaps, lyfter_start_coord, lyfter_dest_coord ,alternatives=True, mode="driving")
         lyfter_dest_coord = (self.lyfter_service_obj.destination_lat, self.lyfter_service_obj.destination_long)
         routes = directions(self.gmaps, lyfter_start_coord, lyfter_dest_coord, alternatives=True, mode="driving")
         route_duration = [route["legs"][0]["duration"]["value"] for route in routes]
@@ -41,8 +40,10 @@ class SchedulerEngine:
             points_list += polyline.decode(step["polyline"]["points"])
 
         threshold = 0.5
-        min_distance = float("inf")
-        point_with_least_distance = (float("inf"), float("inf"))
+        src_min_distance = float("inf")
+        dest_min_distance = float("inf")
+        src_point_with_least_distance = (float("inf"), float("inf"))
+        dest_point_with_least_distance = (float("inf"), float("inf"))
         is_lyftee_source_on_the_way = False
         is_lyftee_dest_on_the_way = False
 
@@ -51,18 +52,21 @@ class SchedulerEngine:
             dest_distance = geopy.distance.geodesic(lyftee_coord_dest, polyline_coord).km
 
             if src_distance <= threshold:
-                if src_distance < min_distance:
-                    min_distance = src_distance
+                if src_distance < src_min_distance:
+                    src_min_distance = src_distance
                     is_lyftee_source_on_the_way = True
-                    point_with_least_distance = polyline_coord
+                    src_point_with_least_distance = polyline_coord
 
             if dest_distance <= threshold:
-                is_lyftee_dest_on_the_way = True
+                if dest_distance < dest_min_distance:
+                    dest_min_distance = dest_distance
+                    is_lyftee_dest_on_the_way = True
+                    dest_point_with_least_distance = polyline_coord
 
         if is_lyftee_source_on_the_way & is_lyftee_dest_on_the_way:
-            return  True, point_with_least_distance, min_distance
+            return  True, src_point_with_least_distance, src_min_distance, dest_point_with_least_distance, dest_min_distance
         else:
-            return False, (float("inf"), float("inf")), float("inf")
+            return False, (float("inf"), float("inf")), float("inf"), (float("inf"), float("inf")), float("inf")
 
     def _get_servicable_schedules(self, candidate_lyftee_points):
         lyfter_coord = (self.lyfter_service_obj.source_lat, self.lyfter_service_obj.source_long)
@@ -92,10 +96,13 @@ class SchedulerEngine:
         for schedule_lyft in scheduled_lyfts:
             lyftee_coord_src = (schedule_lyft.source_lat, schedule_lyft.source_long)
             lyftee_coord_dest = (schedule_lyft.destination_lat, schedule_lyft.destination_long)
-            status, point, distance = self._is_lyftee_path_on_the_way(lyftee_coord_src, lyftee_coord_dest ,fastest_lyfter_route)
+            status, src_point, src_distance, dest_point, dest_distance = self._is_lyftee_path_on_the_way(lyftee_coord_src, lyftee_coord_dest ,fastest_lyfter_route)
 
             if status:
-                assignable_schedule_lyfts.append(CandidateLyfteePoint(schedule_lyft, point, distance))
+                assignable_schedule_lyfts.append(CandidateLyfteePoint(
+                    schedule_lyft, src_point, src_distance,
+                    dest_point, dest_distance,
+                ))
         print(assignable_schedule_lyfts)
         if len(assignable_schedule_lyfts) > 0:
             assignable_schedule_lyfts.sort(key=lambda obj: obj.lyftee_schedule_obj.timestamp)

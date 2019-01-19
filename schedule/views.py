@@ -71,8 +71,10 @@ class LyfterServiceViewset(viewsets.ModelViewSet):
             pool_ride_object = PoolRide.objects.create(
                 lyfter_service=lyfter_service_object,
                 lyftee_schedule=candidate_lyftee_point.lyftee_schedule_obj,
-                pickup_point_lat=candidate_lyftee_point.nearest_point[0],
-                pickup_point_long=candidate_lyftee_point.nearest_point[1],
+                pickup_point_lat=candidate_lyftee_point.src_nearest_point[0],
+                pickup_point_long=candidate_lyftee_point.src_nearest_point[1],
+                drop_point_lat=candidate_lyftee_point.dest_nearest_point[0],
+                drop_point_long=candidate_lyftee_point.dest_nearest_point[1],
                 timestamp=datetime.datetime.now()
             )
             serializer = PoolRideSerializer(pool_ride_object)
