@@ -9,7 +9,6 @@ The general workflow of the app is as follows:
 5. The rider and the passenger rate each other's experience.
 
 ## Future improvements
-## ------------------------------------------------------------------------------------------------------------
 1. SOS and share trip functionality to ensure safety of everyone involved.
 2. Prioritize a passenger's lift request based on his rating / the number of lifts he has offered to others.
 3. A way to incentivize the app via admobs or donations to keep the app live on AWS !
