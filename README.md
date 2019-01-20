@@ -1,4 +1,4 @@
-# Bharat Lyft
+# Bharat Lyft (https://github.com/deepaknairrpf/desi-lyft/wiki/Welcome-to-Bharat-Lyft-(-A-NOT-FOR-PROFIT-APPLICATION))
 Bharat Lyft is a utilitarian ubiquitous not-for-profit app which aims to promote sustainable mobility.  It provides an opportunity for people to schedule a lift in a vehicle and connect them to another person who might feel generous at the moment to offer someone a lift. This app is not currently focussed to be incentivized  and rather a step in the direction of social responsibility.  This app ensures that the person offering a lift will incur no deviation from his intended optimal route and the passenger seeking lift will always be assigned a ride with a pickup point, within a threshold of 500 mts. We believe this app, if used regularly will greatly cut down traffic congestion, carbon footprint and cost involved in transit.
 
 ## Workflow
